@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="100px" height="100px" viewBox="0 0 100 100" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 55.2 (78181) - https://sketchapp.com -->
+    <title>Freezer-grey</title>
+    <desc>Created with Sketch.</desc>
+    <defs>
+        <path d="M39,49.8954975 L50.0431868,39 L61.0863735,49.8954975 L50.0431868,60.790995 L39,49.8954975 Z M50,1.0658141e-14 L100,50 L50,100 L7.10542736e-15,50 L50,1.0658141e-14 Z M49.4619151,23.5918575 L22.5918575,50.4619151 L49.4619151,77.3319728 L76.3319728,50.4619151 L49.4619151,23.5918575 Z" id="path-1"></path>
+    </defs>
+    <g id="Overview" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="MULTI-SENDER" transform="translate(-450.000000, -763.000000)">
+            <g id="Freezer-grey" transform="translate(450.000000, 763.000000)">
+                <mask id="mask-2" fill="white">
+                    <use xlink:href="#path-1"></use>
+                </mask>
+                <use id="Mask" fill="#F0B90B" fill-rule="nonzero" xlink:href="#path-1"></use>
+                <g id="COLOUR/GRAY" mask="url(#mask-2)" fill="#848E9C">
+                    <g transform="translate(-1.000000, -1.000000)" id="Rectangle">
+                        <rect x="0" y="0" width="101" height="101"></rect>
+                    </g>
+                </g>
+            </g>
+        </g>
+    </g>
+</svg>
