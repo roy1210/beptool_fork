@@ -254,8 +254,20 @@ const MultiSend = (props) => {
             })
           }
 
+          const request = context.wallet.walletconnect._formatRequest({
+            method: "trust_signTransaction",
+            params: [
+              {
+                NETWORK_ID,
+                transaction: JSON.stringify(tx),
+              },
+            ],
+          });
+
+          console.log("request", request);
+
           context.wallet.walletconnect
-            .trustSignTransaction(NETWORK_ID, tx)
+            ._sendCallRequest(request)
             .then(result => {
               // Returns transaction signed in json or encoded format
               window.result = result

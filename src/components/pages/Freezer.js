@@ -145,9 +145,20 @@ const Freezer = (props) => {
           } else {
             throw new Error("invalid mode")
           }
+          const request = context.wallet.walletconnect._formatRequest({
+            method: "trust_signTransaction",
+            params: [
+              {
+                NETWORK_ID,
+                transaction: JSON.stringify(tx),
+              },
+            ],
+          });
+          console.log("request", request);
+          // debugger
           window.mywall = context.wallet.walletconnect
           context.wallet.walletconnect
-            .trustSignTransaction(NETWORK_ID, tx)
+            ._sendCallRequest(request)
             .then(result => {
               // Returns transaction signed in json or encoded format
               window.result = result

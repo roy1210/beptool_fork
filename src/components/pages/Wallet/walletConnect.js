@@ -1,6 +1,6 @@
 import React, { useContext } from 'react'
-
-import WalletConnect from "@trustwallet/walletconnect";
+import WalletConnect from "@walletconnect/client";
+// import WalletConnect from "@trustwallet/walletconnect";
 import WalletConnectQRCodeModal from "@walletconnect/qrcode-modal";
 
 import { Text, Button } from '../../Components'
@@ -16,10 +16,11 @@ const WalletConnectPane = props => {
 
   const walletConnect = async () => {
     const walletConnector = window.mywallet = new WalletConnect({
-      bridge: "https://bridge.walletconnect.org" // Required
+      bridge: "https://bridge.walletconnect.org", // Required
+      qrcodeModal: WalletConnectQRCodeModal,
     });
 
-    walletConnector.killSession()
+
 
     // Check if connection is already established
     if (!walletConnector.connected) {
@@ -33,6 +34,8 @@ const WalletConnectPane = props => {
           console.log("QR Code Modal closed");
         })
       })
+    } else {
+      walletConnector.killSession()
     }
 
     // Subscribe to connection events
@@ -42,12 +45,16 @@ const WalletConnectPane = props => {
       }
 
       // Close QR Code Modal
-      WalletConnectQRCodeModal.close();
+      // WalletConnectQRCodeModal.close();
 
       // Get provided accounts and chainId
       // const { accounts, chainId } = payload.params[0];
 
-      walletConnector.getAccounts().then(result => {
+        const request = walletConnector._formatRequest({
+        method: "get_accounts",
+      });
+
+      walletConnector._sendCallRequest(request).then(result => {
         // Returns the accounts
         const account = result.find((account) => account.network === 714);
         console.log("ACCOUNT:", account)
@@ -60,6 +67,7 @@ const WalletConnectPane = props => {
             "account": account,
           }
         }, () => {
+          WalletConnectQRCodeModal.close()
           props.history.push("/")
         })
       })
