@@ -3,7 +3,7 @@ import React, { useState, useEffect, } from "react"
 import Binance from "../../clients/binance"
 
 import { Row, Col } from 'antd'
-import { H1, Text} from "../Components"
+import { H1, Text} from "../pages/Components"
 
 
 const Fees = (props) => {

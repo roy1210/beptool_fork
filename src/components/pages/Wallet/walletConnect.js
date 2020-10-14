@@ -3,7 +3,7 @@ import WalletConnect from "@walletconnect/client";
 // import WalletConnect from "@trustwallet/walletconnect";
 import WalletConnectQRCodeModal from "@walletconnect/qrcode-modal";
 
-import { Text, Button } from '../../Components'
+import { Text, Button } from '../Components'
 import { Icon as AntIcon, Row, Col } from 'antd'
 
 import { Context } from '../../../context'

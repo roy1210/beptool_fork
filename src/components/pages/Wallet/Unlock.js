@@ -3,7 +3,7 @@ import { Row, Col, Tabs } from 'antd'
 
 import Breakpoint from 'react-socks';
 
-import { Center, H1, Text } from '../../Components'
+import { Center, H1, Text } from '../Components'
 import Mnemonic from "./Mnemonic"
 import Keystore from "./Keystore"
 import Ledger from "./Ledger"

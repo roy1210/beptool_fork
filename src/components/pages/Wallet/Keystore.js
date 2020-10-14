@@ -5,7 +5,7 @@ import { FilePicker } from 'react-file-picker'
 
 import Binance from "../../../clients/binance"
 import { Context } from '../../../context'
-import { Button, Text } from '../../Components'
+import { Button, Text } from '../Components'
 
 const Keystore = props => {
   const context = useContext(Context)

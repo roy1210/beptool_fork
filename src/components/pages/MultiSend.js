@@ -11,7 +11,7 @@ import Binance from "../../clients/binance"
 import { CHAIN_ID, NETWORK_ID } from '../../env'
 
 import { Row, Icon as AntIcon, Col, Modal, Button as AntButton, Form, Input, message } from 'antd'
-import { H1, Icon, Button, Center, Text, Coin, WalletAddress, WalletAddrShort} from "../Components"
+import { H1, Icon, Button, Center, Text, Coin, WalletAddress, WalletAddrShort} from "../pages/Components"
 
 const Transfer = (props) => {
   const { getFieldDecorator, getFieldError, isFieldTouched } = props.form;

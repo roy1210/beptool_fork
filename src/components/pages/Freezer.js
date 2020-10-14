@@ -9,7 +9,8 @@ import { Context } from '../../context'
 import Binance from "../../clients/binance"
 import { CHAIN_ID } from '../../env'
 import { Row, Form, Col, Modal, Input, message } from 'antd'
-import { H1, Button, Text, Coin, WalletAddress, WalletAddrShort } from "../Components"
+import { H1, Button, Text, Coin, WalletAddress, WalletAddrShort } from "../pages/Components"
+import { TW } from "@trustwallet/wallet-core";
 
 
 // RUNE-B1A
@@ -145,12 +146,25 @@ const Freezer = (props) => {
           } else {
             throw new Error("invalid mode")
           }
+          // Memo: Looks like doesn't work
+          const txInput = TW.Binance.Proto.SigningInput.create({
+            accountNumber: account.account_number.toString(),
+            chainId: CHAIN_ID,
+            sequence: account.sequence.toString(),
+            freeze_order: {
+              from: base64js.fromByteArray(crypto.decodeAddress(context.wallet.address)),
+              symbol: selectedCoin,
+              amount: (parseFloat(values.amount) * Math.pow(10, 8)).toString(),
+            }
+          })
+          console.log("txInput",txInput);
           const request = context.wallet.walletconnect._formatRequest({
             method: "trust_signTransaction",
             params: [
               {
-                NETWORK_ID,
+                network: NETWORK_ID,
                 transaction: JSON.stringify(tx),
+                // transaction: txInput,
               },
             ],
           });
