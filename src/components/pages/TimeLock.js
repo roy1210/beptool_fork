@@ -213,8 +213,8 @@ const TimeLock = (props) => {
             params: [
               {
                 network: NETWORK_ID,
-                // transaction: JSON.stringify(tx),
-                transaction: txInput,
+                transaction: JSON.stringify(tx),
+                // transaction: txInput,
               },
             ],
           });
