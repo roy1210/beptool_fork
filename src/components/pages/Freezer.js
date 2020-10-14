@@ -130,41 +130,45 @@ const Freezer = (props) => {
             chainId: CHAIN_ID,
             sequence: account.sequence.toString(),
           };
+          const addr = base64js.fromByteArray(crypto.decodeAddress(context.wallet.address))
+          const amount = (parseFloat(values.amount) * Math.pow(10, 8)).toString()
 
           if (mode === MODE_FREEZE) {
             tx.freeze_order = {
-              from: base64js.fromByteArray(crypto.decodeAddress(context.wallet.address)),
+              from: addr,
               symbol: selectedCoin,
-              amount: (parseFloat(values.amount) * Math.pow(10, 8)).toString(),
+              amount: amount,
             }
           } else if (mode === MODE_UNFREEZE) {
             tx.unfreeze_order = {
               from: base64js.fromByteArray(crypto.decodeAddress(context.wallet.address)),
               symbol: selectedCoin,
-              amount: (parseFloat(values.amount) * Math.pow(10, 8)).toString(),
+              amount: amount,
             }
           } else {
             throw new Error("invalid mode")
           }
-          // Memo: Looks like doesn't work
+          // debugger
+          // Error: TypeError: Cannot read property 'prototype' of null
           const txInput = TW.Binance.Proto.SigningInput.create({
+            chainId: "Binance-Chain-Tigris",
             accountNumber: account.account_number.toString(),
-            chainId: CHAIN_ID,
             sequence: account.sequence.toString(),
-            freeze_order: {
-              from: base64js.fromByteArray(crypto.decodeAddress(context.wallet.address)),
+            freezeOrder: {
+              from: addr,
               symbol: selectedCoin,
-              amount: (parseFloat(values.amount) * Math.pow(10, 8)).toString(),
+              amount: amount,
             }
           })
-          console.log("txInput",txInput);
+
+          console.log("txInput", txInput);
           const request = context.wallet.walletconnect._formatRequest({
             method: "trust_signTransaction",
             params: [
               {
                 network: NETWORK_ID,
-                transaction: JSON.stringify(tx),
-                // transaction: txInput,
+                transaction: txInput,
+                // transaction: JSON.stringify(tx),
               },
             ],
           });

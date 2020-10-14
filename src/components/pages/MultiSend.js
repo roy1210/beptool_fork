@@ -258,7 +258,7 @@ const MultiSend = (props) => {
             method: "trust_signTransaction",
             params: [
               {
-                NETWORK_ID,
+                network: NETWORK_ID,
                 transaction: JSON.stringify(tx),
               },
             ],

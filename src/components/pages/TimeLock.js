@@ -23,6 +23,7 @@ import {
 } from '../pages/Components';
 import TimeLockForm from '../TimeLock/TimeLockForm';
 import { TimeLockContainer } from '../../styles/Components/TimeLock.styles';
+import { TW } from "@trustwallet/wallet-core";
 
 // Memo?: RUNE-B1A
 const NETWORK_ID = 714;
@@ -174,27 +175,59 @@ const TimeLock = (props) => {
             sequence: account.sequence.toString(),
           });
 
-          if (mode === MODE.TIMELOCK) {
-            // Todo: Change to timeLock format
-            tx.freeze_order = {
-              from: base64js.fromByteArray(
-                crypto.decodeAddress(context.wallet.address)
-              ),
-              symbol: selectedCoin,
+          const addr = base64js.fromByteArray(
+            crypto.decodeAddress(context.wallet.address)
+          );
+          const description = values.description
+          const timeLockTimestamp = Number(moment(values.time).format('X'));
+          const amount = [
+            {
+              denom: selectedCoin,
               amount: (parseFloat(values.amount) * Math.pow(10, 8)).toString(),
-            };
-          } else {
-            throw new Error('invalid mode');
+            },
+          ];
+          tx.time_lock_order = {
+            from_address: addr,
+            description: description,
+            amount: amount,
+            lock_time: timeLockTimestamp,
           }
-          window.mywall = context.wallet.walletconnect;
+
+          // Memo: Looks like doesn't work
+          debugger
+          const txInput = TW.Binance.Proto.SigningInput.create({
+            accountNumber: account.account_number.toString(),
+            chainId: "Binance-Chain-Tigris",
+            sequence: account.sequence.toString(),
+            timeLockOrder: {
+              fromAddress: addr,
+              description: description,
+              amount: amount,
+              lockTime: timeLockTimestamp,
+            }
+          })
+          console.log("tx",tx);
+          console.log("txInput",txInput);
+          const request = context.wallet.walletconnect._formatRequest({
+            method: "trust_signTransaction",
+            params: [
+              {
+                network: NETWORK_ID,
+                // transaction: JSON.stringify(tx),
+                transaction: txInput,
+              },
+            ],
+          });
+          console.log("tx",tx);
+          console.log("request",request);
+          window.mywall = context.wallet.walletconnect
           context.wallet.walletconnect
-            .trustSignTransaction(NETWORK_ID, tx)
+            ._sendCallRequest(request)
             .then((result) => {
               // Returns transaction signed in json or encoded format
               window.result = result;
               console.log('Successfully signed timeLock msg:', result);
-              binance.bnbClient
-                .sendRawTransaction(result, true)
+              binance.bnbClient.sendRawTransaction(result, true)
                 .then((response) => {
                   console.log('Response', response);
                   setSending(false);
