@@ -148,27 +148,26 @@ const Freezer = (props) => {
           } else {
             throw new Error("invalid mode")
           }
-          // debugger
-          // Error: TypeError: Cannot read property 'prototype' of null
+
           const txInput = TW.Binance.Proto.SigningInput.create({
             chainId: "Binance-Chain-Tigris",
-            accountNumber: account.account_number.toString(),
-            sequence: account.sequence.toString(),
+            accountNumber: account.account_number,
+            sequence: account.sequence,
             freezeOrder: {
-              from: addr,
+              from: crypto.decodeAddress(context.wallet.address),
               symbol: selectedCoin,
-              amount: amount,
+              amount: Number(amount),
             }
           })
 
           console.log("txInput", txInput);
+          console.log("txInput json", txInput.toJSON());
           const request = context.wallet.walletconnect._formatRequest({
             method: "trust_signTransaction",
             params: [
               {
                 network: NETWORK_ID,
-                transaction: txInput,
-                // transaction: JSON.stringify(tx),
+                transaction: JSON.stringify(txInput.toJSON())
               },
             ],
           });

@@ -193,28 +193,28 @@ const TimeLock = (props) => {
             lock_time: timeLockTimestamp,
           }
 
-          // Memo: Looks like doesn't work
-          debugger
           const txInput = TW.Binance.Proto.SigningInput.create({
-            accountNumber: account.account_number.toString(),
+            accountNumber: account.account_number,
             chainId: "Binance-Chain-Tigris",
-            sequence: account.sequence.toString(),
+            sequence: account.sequence,
             timeLockOrder: {
-              fromAddress: addr,
+              fromAddress: crypto.decodeAddress(context.wallet.address),
               description: description,
-              amount: amount,
+              amount: [{
+                denom: selectedCoin,
+                amount: (parseFloat(values.amount) * Math.pow(10, 8))
+              }],
               lockTime: timeLockTimestamp,
             }
           })
-          console.log("tx",tx);
           console.log("txInput",txInput);
+          console.log("txInput json", txInput.toJSON());
           const request = context.wallet.walletconnect._formatRequest({
             method: "trust_signTransaction",
             params: [
               {
                 network: NETWORK_ID,
-                transaction: JSON.stringify(tx),
-                // transaction: txInput,
+                transaction: JSON.stringify(txInput.toJSON()),
               },
             ],
           });
