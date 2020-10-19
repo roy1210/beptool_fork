@@ -302,6 +302,18 @@ const TimeLock = (props) => {
             amount,
             timelockTimestamp
           );
+
+          // Memo: Check whether TW sign can directly broadcast without go through `setSigningDelegate`.
+          // Error: `trustSignTransaction` didn't return anything
+          const result = (window.result = await trustSignTransaction(
+            lockInput
+          ));
+          console.log('Successfully signed tx:', result);
+          const response = await Binance.bnbClient.sendRawTransaction(
+            result,
+            true
+          );
+          console.log('response', response);
         } catch (err) {
           window.err = err;
           console.error('TimeLock error:', err);
@@ -318,6 +330,18 @@ const TimeLock = (props) => {
             amount,
             timelockTimestamp
           );
+
+          // Memo: Check whether TW sign can directly broadcast without go through `setSigningDelegate`.
+          // Error: Signature verification failed
+          // const result = (window.result = await trustSignTransaction(
+          //   relockInput
+          // ));
+          // console.log('Successfully signed tx:', result);
+          // const response = await Binance.bnbClient.sendRawTransaction(
+          //   result,
+          //   true
+          // );
+          // console.log('response', response);
         } catch (err) {
           window.err = err;
           console.error('TimeRelock error:', err);
@@ -328,6 +352,18 @@ const TimeLock = (props) => {
         console.log('Run timeUnlock');
         try {
           await client.tokens.timeUnlock(addr, id);
+
+          // Memo: Check whether TW sign can directly broadcast without go through `setSigningDelegate`.
+          // Error: Signature verification failed
+          // const result = (window.result = await trustSignTransaction(
+          //   unlockInput
+          // ));
+          // console.log('Successfully signed tx:', result);
+          // const response = await Binance.bnbClient.sendRawTransaction(
+          //   result,
+          //   true
+          // );
+          // console.log('response', response);
         } catch (err) {
           window.err = err;
           console.error('TimeUnlock error:', err);

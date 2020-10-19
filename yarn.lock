@@ -2234,10 +2234,10 @@
   resolved "https://registry.yarnpkg.com/@testing-library/user-event/-/user-event-7.2.1.tgz#2ad4e844175a3738cb9e7064be5ea070b8863a1c"
   integrity sha512-oZ0Ib5I4Z2pUEcoo95cT1cr6slco9WY7yiPpG+RGNkj8YcYgJnM7pXmYmorNOReh8MIGcKSqXyeGjxnr8YiZbA==
 
-"@trustwallet/wallet-core@^2.3.0":
-  version "2.3.0"
-  resolved "https://registry.yarnpkg.com/@trustwallet/wallet-core/-/wallet-core-2.3.0.tgz#37e6a48a7347f1c34db55d93d6cd2e57286c9788"
-  integrity sha512-SFbvUbFUUTX44JlSh4nC12Kyr8DQG3GVHxpR+TWwkAMcCmmMXYRhZg6ijOC0TT3g6Nw/ze904+6IJ5m2mjtJ5Q==
+"@trustwallet/wallet-core@^2.3.2":
+  version "2.3.2"
+  resolved "https://registry.yarnpkg.com/@trustwallet/wallet-core/-/wallet-core-2.3.2.tgz#1a2449d10e0a31a1d5735b893425dd435f313fee"
+  integrity sha512-rV4tYm24sW1XHS+AJs0mk/KumZx3VYVWy0JimSmTb+QbtWn0Anul25grysto8/BSt/DrLs4ym2c+Fhpbpx2kIw==
   dependencies:
     protobufjs "^6.9.0"
 
