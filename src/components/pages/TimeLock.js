@@ -305,15 +305,15 @@ const TimeLock = (props) => {
 
           // Memo: Check whether TW sign can directly broadcast without go through `setSigningDelegate`.
           // Error: `trustSignTransaction` didn't return anything
-          const result = (window.result = await trustSignTransaction(
-            lockInput
-          ));
-          console.log('Successfully signed tx:', result);
-          const response = await Binance.bnbClient.sendRawTransaction(
-            result,
-            true
-          );
-          console.log('response', response);
+          // const result = (window.result = await trustSignTransaction(
+          //   lockInput
+          // ));
+          // console.log('Successfully signed tx:', result);
+          // const response = await Binance.bnbClient.sendRawTransaction(
+          //   result,
+          //   true
+          // );
+          // console.log('response', response);
         } catch (err) {
           window.err = err;
           console.error('TimeLock error:', err);
