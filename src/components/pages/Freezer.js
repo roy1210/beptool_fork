@@ -9,7 +9,8 @@ import { Context } from '../../context'
 import Binance from "../../clients/binance"
 import { CHAIN_ID } from '../../env'
 import { Row, Form, Col, Modal, Input, message } from 'antd'
-import { H1, Button, Text, Coin, WalletAddress, WalletAddrShort } from "../Components"
+import { H1, Button, Text, Coin, WalletAddress, WalletAddrShort } from "../pages/Components"
+import { TW } from "@trustwallet/wallet-core";
 
 
 // RUNE-B1A
@@ -129,25 +130,52 @@ const Freezer = (props) => {
             chainId: CHAIN_ID,
             sequence: account.sequence.toString(),
           };
+          const addr = base64js.fromByteArray(crypto.decodeAddress(context.wallet.address))
+          const amount = (parseFloat(values.amount) * Math.pow(10, 8)).toString()
 
           if (mode === MODE_FREEZE) {
             tx.freeze_order = {
-              from: base64js.fromByteArray(crypto.decodeAddress(context.wallet.address)),
+              from: addr,
               symbol: selectedCoin,
-              amount: (parseFloat(values.amount) * Math.pow(10, 8)).toString(),
+              amount: amount,
             }
           } else if (mode === MODE_UNFREEZE) {
             tx.unfreeze_order = {
               from: base64js.fromByteArray(crypto.decodeAddress(context.wallet.address)),
               symbol: selectedCoin,
-              amount: (parseFloat(values.amount) * Math.pow(10, 8)).toString(),
+              amount: amount,
             }
           } else {
             throw new Error("invalid mode")
           }
+
+          const txInput = TW.Binance.Proto.SigningInput.create({
+            chainId: "Binance-Chain-Tigris",
+            accountNumber: account.account_number,
+            sequence: account.sequence,
+            freezeOrder: {
+              from: crypto.decodeAddress(context.wallet.address),
+              symbol: selectedCoin,
+              amount: Number(amount),
+            }
+          })
+
+          console.log("txInput", txInput);
+          console.log("txInput json", txInput.toJSON());
+          const request = context.wallet.walletconnect._formatRequest({
+            method: "trust_signTransaction",
+            params: [
+              {
+                network: NETWORK_ID,
+                transaction: JSON.stringify(txInput.toJSON())
+              },
+            ],
+          });
+          console.log("request", request);
+          // debugger
           window.mywall = context.wallet.walletconnect
           context.wallet.walletconnect
-            .trustSignTransaction(NETWORK_ID, tx)
+            ._sendCallRequest(request)
             .then(result => {
               // Returns transaction signed in json or encoded format
               window.result = result

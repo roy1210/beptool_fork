@@ -5,7 +5,7 @@ import { Row, Col } from 'antd'
 
 import { Context } from '../../../context'
 import Binance from "../../../clients/binance"
-import { H1, Text, Button, Coin } from "../../Components"
+import { H1, Text, Button, Coin } from "../Components"
 
 const Wallet = props => {
   const context = useContext(Context)

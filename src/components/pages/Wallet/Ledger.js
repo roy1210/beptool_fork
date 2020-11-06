@@ -5,7 +5,7 @@ import u2f_transport from '@ledgerhq/hw-transport-u2f'
 
 import Binance from '../../../clients/binance'
 import { Context } from '../../../context'
-import { Icon, Button, Text } from '../../Components'
+import { Icon, Button, Text } from '../Components'
 import { InputNumber } from 'antd'
 
 ledger.transports.u2f = u2f_transport

@@ -11,7 +11,7 @@ import Binance from "../../clients/binance"
 import { CHAIN_ID, NETWORK_ID } from '../../env'
 
 import { Row, Icon as AntIcon, Col, Modal, Button as AntButton, Form, Input, message } from 'antd'
-import { H1, Icon, Button, Center, Text, Coin, WalletAddress, WalletAddrShort} from "../Components"
+import { H1, Icon, Button, Center, Text, Coin, WalletAddress, WalletAddrShort} from "../pages/Components"
 
 const Transfer = (props) => {
   const { getFieldDecorator, getFieldError, isFieldTouched } = props.form;
@@ -254,8 +254,20 @@ const MultiSend = (props) => {
             })
           }
 
+          const request = context.wallet.walletconnect._formatRequest({
+            method: "trust_signTransaction",
+            params: [
+              {
+                network: NETWORK_ID,
+                transaction: JSON.stringify(tx),
+              },
+            ],
+          });
+
+          console.log("request", request);
+
           context.wallet.walletconnect
-            .trustSignTransaction(NETWORK_ID, tx)
+            ._sendCallRequest(request)
             .then(result => {
               // Returns transaction signed in json or encoded format
               window.result = result
