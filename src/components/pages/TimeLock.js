@@ -1,7 +1,7 @@
 import TokenManagement, { crypto } from '@binance-chain/javascript-sdk';
+import { TW } from '@trustwallet/wallet-core';
 import { Col, Form, message, Modal, Row } from 'antd';
 import axios from 'axios';
-import base64js from 'base64-js';
 import moment from 'moment';
 import React, { useContext, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
@@ -10,6 +10,7 @@ import Binance from '../../clients/binance';
 import { Context } from '../../context';
 import { MODE } from '../../data/constants';
 import { CHAIN_ID } from '../../env';
+import { TimeLockContainer } from '../../styles/Components/TimeLock.styles';
 import { addComma } from '../../utils/addComma';
 import { reducer } from '../../utils/reducer';
 import { toSatoshi } from '../../utils/toSatoshi';
@@ -22,8 +23,6 @@ import {
   WalletAddrShort,
 } from '../pages/Components';
 import TimeLockForm from '../TimeLock/TimeLockForm';
-import { TimeLockContainer } from '../../styles/Components/TimeLock.styles';
-import { TW } from "@trustwallet/wallet-core";
 
 // Memo?: RUNE-B1A
 const NETWORK_ID = 714;
@@ -155,6 +154,27 @@ const TimeLock = (props) => {
     setVisible(true);
   };
 
+  const trustSignTransaction = async (txInput) => {
+    // Memo: Wallet connect class instance
+    const wc = context.wallet.walletconnect;
+
+    const request = await wc._formatRequest({
+      method: 'trust_signTransaction',
+      params: [
+        {
+          network: NETWORK_ID,
+          transaction: JSON.stringify(txInput.toJSON()),
+        },
+      ],
+    });
+    console.log('request', request);
+    try {
+      return await wc._sendCallRequest(request);
+    } catch (error) {
+      throw error;
+    }
+  };
+
   const handleOk = async (values) => {
     if (!context.wallet || !context.wallet.address) {
       console.log('No wallet detected!');
@@ -165,99 +185,192 @@ const TimeLock = (props) => {
     const binance = Binance;
 
     if (context.wallet.walletconnect) {
-      Binance.getAccount(context.wallet.address)
-        .then((response) => {
-          const account = response.result;
-          console.log('AccountInfo:', account);
-          const tx = (window.tx = {
-            accountNumber: account.account_number.toString(),
-            chainId: CHAIN_ID,
-            sequence: account.sequence.toString(),
-          });
+      const accountResponse = await Binance.getAccount(context.wallet.address);
+      const account = accountResponse.result;
+      console.log('AccountInfo:', account);
 
-          const addr = base64js.fromByteArray(
-            crypto.decodeAddress(context.wallet.address)
+      const addr = context.wallet.address;
+      const id = lockTx ? lockTx.id : 0;
+      console.log('id', id);
+      const description = values.description;
+      const timelockTimestamp = Number(moment(values.time).format('X'));
+      const amount = [
+        {
+          denom: selectedCoin,
+          amount: parseFloat(values.amount) * Math.pow(10, 8),
+        },
+      ];
+
+      // Memo: Here we set the two main delegates - signing and broadcast.
+      const client = Binance.bnbClient;
+
+      const lockInput = TW.Binance.Proto.SigningInput.create({
+        accountNumber: account.account_number,
+        chainId: CHAIN_ID,
+        sequence: account.sequence,
+        timeLockOrder: {
+          fromAddress: crypto.decodeAddress(addr),
+          description: description,
+          amount: amount,
+          lockTime: timelockTimestamp,
+        },
+      });
+
+      const relockInput = TW.Binance.Proto.SigningInput.create({
+        accountNumber: account.account_number,
+        chainId: CHAIN_ID,
+        sequence: account.sequence,
+        timeRelockOrder: {
+          fromAddress: crypto.decodeAddress(addr),
+          id: id,
+          description: description,
+          amount: amount,
+          lockTime: timelockTimestamp,
+        },
+      });
+      console.log('relockInput', relockInput);
+
+      const unlockInput = TW.Binance.Proto.SigningInput.create({
+        accountNumber: account.account_number,
+        chainId: CHAIN_ID,
+        sequence: account.sequence,
+        timeUnlockOrder: {
+          fromAddress: crypto.decodeAddress(addr),
+          id: id,
+        },
+      });
+      console.log('unlockInput', unlockInput);
+
+      // Memo: The broadcast delegate should be a no-op (not do anything). This is because we broadcast in the signing delegate instead.
+      Binance.bnbClient.setBroadcastDelegate(() => {});
+
+      // Memo: The signing delegate is responsible for handling the WC signing flow and broadcasting the signed transaction through bnbClient.
+      Binance.bnbClient.setSigningDelegate(async (tx, signMsg) => {
+        console.log('running WalletConnect signing...');
+        try {
+          const txInput =
+            mode === MODE.TIMELOCK
+              ? lockInput
+              : mode === MODE.TIMERELOCK
+              ? relockInput
+              : unlockInput;
+
+          const result = (window.result = await trustSignTransaction(txInput));
+          console.log('Successfully signed tx:', result);
+          // Memo: The broadcast happens here instead of it being done by the bnbClient's broadcast delegate.
+          const response = await Binance.bnbClient.sendRawTransaction(
+            result,
+            true
           );
-          const description = values.description
-          const timeLockTimestamp = Number(moment(values.time).format('X'));
-          const amount = [
-            {
-              denom: selectedCoin,
-              amount: (parseFloat(values.amount) * Math.pow(10, 8)).toString(),
-            },
-          ];
-          tx.time_lock_order = {
-            from_address: addr,
-            description: description,
-            amount: amount,
-            lock_time: timeLockTimestamp,
+          if (response.result[0].ok) {
+            const txURL = Binance.txURL(response.result[0].hash);
+            message.success(
+              <p>
+                Sent.{' '}
+                <a target='_blank' rel='noopener noreferrer' href={txURL}>
+                  See transaction
+                </a>
+                .
+              </p>,
+              5
+            );
+            setVisible(false);
+            setSending(false);
+            getBalances();
+            setTimeout(() => {
+              getTimeLockTxs(context.wallet.address, selectedCoin);
+            }, 2000);
           }
-
-          // Memo: Looks like doesn't work
-          debugger
-          const txInput = TW.Binance.Proto.SigningInput.create({
-            accountNumber: account.account_number.toString(),
-            chainId: "Binance-Chain-Tigris",
-            sequence: account.sequence.toString(),
-            timeLockOrder: {
-              fromAddress: addr,
-              description: description,
-              amount: amount,
-              lockTime: timeLockTimestamp,
-            }
-          })
-          console.log("tx",tx);
-          console.log("txInput",txInput);
-          const request = context.wallet.walletconnect._formatRequest({
-            method: "trust_signTransaction",
-            params: [
-              {
-                network: NETWORK_ID,
-                transaction: JSON.stringify(tx),
-                // transaction: txInput,
-              },
-            ],
-          });
-          console.log("tx",tx);
-          console.log("request",request);
-          window.mywall = context.wallet.walletconnect
-          context.wallet.walletconnect
-            ._sendCallRequest(request)
-            .then((result) => {
-              // Returns transaction signed in json or encoded format
-              window.result = result;
-              console.log('Successfully signed timeLock msg:', result);
-              binance.bnbClient.sendRawTransaction(result, true)
-                .then((response) => {
-                  console.log('Response', response);
-                  setSending(false);
-                  setVisible(false);
-                  getBalances();
-                })
-                .catch((error) => {
-                  message.error(error.message);
-                  setSending(false);
-                  setVisible(false);
-                  console.error(error);
-                });
-            })
-            .catch((error) => {
-              // Error returned when rejected
-              console.error(error);
-              message.error(error.message);
-              setSending(false);
-              setVisible(false);
-            });
-          return;
-        })
-        .catch((error) => {
-          window.err = error;
-          message.error(error.message);
-          setSending(false);
+        } catch (err) {
           setVisible(false);
-          console.error(error);
-          return;
-        });
+          setSending(false);
+          console.error('WalletConnect error!', err);
+          throw err;
+        }
+        // Memo: We return the (unsigned) TX, which would normally cause a no signers error with the default broadcast delegate.
+        // However, we have used the no-op broadcast delegate above, so this is OK.
+        return tx;
+      });
+
+      // Memo: Trigger the timeLock from the standard Binance SDK.
+      if (mode === MODE.TIMELOCK) {
+        console.log('Run timelock');
+        try {
+          await client.tokens.timeLock(
+            addr,
+            description,
+            amount,
+            timelockTimestamp
+          );
+
+          // Memo: Check whether TW sign can directly broadcast without go through `setSigningDelegate`.
+          // Error: `trustSignTransaction` didn't return anything
+          // const result = (window.result = await trustSignTransaction(
+          //   lockInput
+          // ));
+          // console.log('Successfully signed tx:', result);
+          // const response = await Binance.bnbClient.sendRawTransaction(
+          //   result,
+          //   true
+          // );
+          // console.log('response', response);
+        } catch (err) {
+          window.err = err;
+          console.error('TimeLock error:', err);
+          message.error(err.message);
+          setSending(false);
+        }
+      } else if (mode === MODE.TIMERELOCK) {
+        console.log('Run timeRelock');
+        try {
+          await client.tokens.timeRelock(
+            addr,
+            id,
+            description,
+            amount,
+            timelockTimestamp
+          );
+
+          // Memo: Check whether TW sign can directly broadcast without go through `setSigningDelegate`.
+          // Error: Signature verification failed
+          // const result = (window.result = await trustSignTransaction(
+          //   relockInput
+          // ));
+          // console.log('Successfully signed tx:', result);
+          // const response = await Binance.bnbClient.sendRawTransaction(
+          //   result,
+          //   true
+          // );
+          // console.log('response', response);
+        } catch (err) {
+          window.err = err;
+          console.error('TimeRelock error:', err);
+          message.error(err.message);
+          setSending(false);
+        }
+      } else if (mode === MODE.TIMEUNLOCK) {
+        console.log('Run timeUnlock');
+        try {
+          await client.tokens.timeUnlock(addr, id);
+
+          // Memo: Check whether TW sign can directly broadcast without go through `setSigningDelegate`.
+          // Error: Signature verification failed
+          // const result = (window.result = await trustSignTransaction(
+          //   unlockInput
+          // ));
+          // console.log('Successfully signed tx:', result);
+          // const response = await Binance.bnbClient.sendRawTransaction(
+          //   result,
+          //   true
+          // );
+          // console.log('response', response);
+        } catch (err) {
+          window.err = err;
+          console.error('TimeUnlock error:', err);
+          message.error(err.message);
+          setSending(false);
+        }
+      }
     } else {
       if (context.wallet.keystore) {
         try {
@@ -292,8 +405,6 @@ const TimeLock = (props) => {
           console.log('manager', manager);
           const addr = context.wallet.address;
           const description = values.description;
-          // Memo: timestamp for 5mins later
-          // const timeLockTimestamp = Math.floor(Date.now() / 1000) + 5 * 60;
           const timeLockTimestamp = Number(moment(values.time).format('X'));
           const amount = [
             {
@@ -335,12 +446,9 @@ const TimeLock = (props) => {
           const amount = [
             {
               denom: selectedCoin,
-              // amount: toSatoshi(values.amount),
-              amount: '0',
+              amount: toSatoshi(values.amount),
             },
           ];
-          // const amount = [{}];
-          // const amount = {};
 
           console.log('addr:', addr);
           console.log('description:', description);
